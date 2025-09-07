@@ -53,7 +53,7 @@
 
     async function loadQuestions() {
       try {
-        const res = await fetch("questions.json");
+        const res = await fetch("https://d-laurent8.github.io/quiz-test/questions.json");
         questions = await res.json();
         startQuiz();
       } catch (error) {
@@ -138,3 +138,4 @@
   </script>
 </body>
 </html>
+
