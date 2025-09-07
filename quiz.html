@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #quiz-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-width: 400px;
+      text-align: center;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn:hover { background: #0056b3; }
+    #next-btn { display: none; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div id="quiz-container">
+    <h2 id="question">Loading questions...</h2>
+    <div id="answer-buttons"></div>
+    <button id="next-btn" class="btn">Next</button>
+  </div>
+
+  <script>
+    let questions = [];
+    const questionElement = document.getElementById("question");
+    const answerButtons = document.getElementById("answer-buttons");
+    const nextButton = document.getElementById("next-btn");
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    async function loadQuestions() {
+      try {
+        const res = await fetch("questions.json");
+        questions = await res.json();
+        startQuiz();
+      } catch (error) {
+        questionElement.innerText = "Failed to load questions.";
+        console.error(error);
+      }
+    }
+
+    function startQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      nextButton.innerText = "Next";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      resetState();
+      let currentQuestion = questions[currentQuestionIndex];
+      questionElement.innerText = currentQuestion.question;
+
+      currentQuestion.answers.forEach(answer => {
+        const button = document.createElement("button");
+        button.innerText = answer.text;
+        button.classList.add("btn");
+        button.dataset.correct = answer.correct;
+        button.addEventListener("click", selectAnswer);
+        answerButtons.appendChild(button);
+      });
+    }
+
+    function resetState() {
+      nextButton.style.display = "none";
+      while (answerButtons.firstChild) {
+        answerButtons.removeChild(answerButtons.firstChild);
+      }
+    }
+
+    function selectAnswer(e) {
+      const selectedBtn = e.target;
+      const isCorrect = selectedBtn.dataset.correct === "true";
+      if (isCorrect) {
+        selectedBtn.style.background = "green";
+        score++;
+      } else {
+        selectedBtn.style.background = "red";
+      }
+
+      Array.from(answerButtons.children).forEach(button => {
+        if (button.dataset.correct === "true") {
+          button.style.background = "green";
+        }
+        button.disabled = true;
+      });
+      nextButton.style.display = "block";
+    }
+
+    function showScore() {
+      resetState();
+      questionElement.innerText = `You scored ${score} out of ${questions.length}!`;
+      nextButton.innerText = "Play Again";
+      nextButton.style.display = "block";
+    }
+
+    function handleNextButton() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showScore();
+      }
+    }
+
+    nextButton.addEventListener("click", () => {
+      if (currentQuestionIndex < questions.length) {
+        handleNextButton();
+      } else {
+        startQuiz();
+      }
+    });
+
+    loadQuestions();
+  </script>
+</body>
+</html>
